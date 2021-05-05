@@ -1,0 +1,8 @@
+CREATE TABLE domains (
+    name VARCHAR(64) PRIMARY KEY NOT NULL,
+    realm_id UUID NOT NULL,
+    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+    CONSTRAINT domains_realms_fk FOREIGN KEY(realm_id) REFERENCES realms(id)
+);

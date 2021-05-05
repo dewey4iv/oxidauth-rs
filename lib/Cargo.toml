@@ -1,0 +1,38 @@
+[package]
+name = "lib"
+version = "0.1.0"
+authors = ["George Wheeler <george@dewey4.com>"]
+edition = "2018"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+chrono = { version = "0.4.19", features = ["serde"] }
+env_logger = "0.8.3"
+log = "0.4.14"
+serde = "1.0.125"
+serde_json = "1.0.64"
+tracing = "0.1.25"
+uuid = { version = "0.8.2", features = ["serde", "v4"] }
+serde_derive = "1.0.125"
+futures = "0.3.14"
+anyhow = "1.0.40"
+jsonwebtoken = "7.2.0"
+async-trait = "0.1.50"
+bcrypt = "0.9.0"
+
+[dependencies.sqlx]
+version = "0.4.2"
+features = [
+        "chrono",
+        "decimal",
+        "json",
+        "macros",
+        "migrate",
+        "postgres",
+        "mysql",
+        "runtime-actix-rustls",
+        "tls",
+        "uuid",
+]
+
