@@ -23,7 +23,8 @@ pub async fn cmd(args: Option<&ArgMatches<'_>>) -> Result<()> {
 }
 
 pub fn cfg() -> Config<'static, 'static> {
-    let cfg = Config::new("migrate");
+    let cfg = Config::new("migrate")
+        .about("used to migrate the database");
 
     let cfg = common::database_cfg(cfg);
 

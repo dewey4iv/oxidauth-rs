@@ -23,12 +23,14 @@ pub async fn cmd(args: Option<&ArgMatches<'_>>) -> Result<()> {
 }
 
 pub fn cfg() -> Config<'static, 'static> {
-    let cfg = Config::new("server").arg(
-        Arg::with_name("bind")
-            .long("bind")
-            .env("BIND")
-            .default_value("0.0.0.0:3002"),
-    );
+    let cfg = Config::new("server")
+        .about("hosts the api for oxidauth")
+        .arg(
+            Arg::with_name("bind")
+                .long("bind")
+                .env("BIND")
+                .default_value("0.0.0.0:3002"),
+        );
 
     let cfg = common::database_cfg(cfg);
 
