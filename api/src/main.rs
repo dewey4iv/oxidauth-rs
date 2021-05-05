@@ -17,7 +17,7 @@ pub const APP_NAME: &'static str = "oxidauth";
 #[actix_web::main]
 async fn main() -> Result<()> {
     if Path::new("./.env").exists() {
-        dotenv::from_path("api/.env")?;
+        dotenv::from_path("./.env")?;
     }
 
     let args = Config::new(APP_NAME)
