@@ -3,6 +3,8 @@
 #[macro_use] extern crate serde_derive;
 
 pub mod auth;
+pub mod jwt;
+pub mod rsa;
 pub mod authorities;
 pub mod db;
 pub mod grants;

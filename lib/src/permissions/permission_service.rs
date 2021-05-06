@@ -16,6 +16,12 @@ pub struct Permission {
     pub updated_at: Option<NaiveDateTime>,
 }
 
+impl std::fmt::Display for Permission {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}:{}:{}", self.realm, self.resource, self.action)
+    }
+}
+
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct PermissionCreate {
     pub realm: String,

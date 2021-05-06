@@ -4,6 +4,10 @@ use lib::db::pg;
 use lib::result::Result;
 use std::fmt::Debug;
 use std::net::ToSocketAddrs;
+use lib::authorities::strategies::{
+    self,
+    username_password,
+};
 
 mod auth;
 mod authorities;
@@ -17,6 +21,8 @@ mod users;
 pub async fn start<T: ToSocketAddrs + Debug>(bind: T, database_args: pg::Args<'_>) -> Result<()> {
     let pool = pg::new(database_args).await?;
 
+    let username_password: username_password::AuthService = strategies::Authority::new(&pool)?;
+
     let authority_service = lib::authorities::AuthorityService::new(&pool)?;
     // let domain_service = lib::domains::DomainService::new(&pool)?;
     let grant_service = lib::grants::GrantService::new(&pool)?;
@@ -26,6 +32,8 @@ pub async fn start<T: ToSocketAddrs + Debug>(bind: T, database_args: pg::Args<'_
 
     HttpServer::new(move || {
         let pool = web::Data::new(pool.clone());
+
+        let username_password = web::Data::new(username_password.clone());
 
         let authority_service = web::Data::new(authority_service.clone());
         // let domain_service = web::Data::new(domain_service.clone())?;
@@ -39,6 +47,7 @@ pub async fn start<T: ToSocketAddrs + Debug>(bind: T, database_args: pg::Args<'_
         App::new()
             .wrap(cors_middleware)
             .app_data(pool)
+            .app_data(username_password)
             .app_data(authority_service)
             // .app_data(domain_service)
             .app_data(grant_service)

@@ -438,6 +438,32 @@ pub mod tree {
         pub role: Option<RoleNode>,
     }
 
+    impl RootNode {
+        pub fn roles(&self) -> Vec<String> {
+            if let Some(user) = &self.user {
+                return user.roles()
+            }
+
+            if let Some(role) = &self.role {
+                return role.roles()
+            }
+
+            vec![]
+        }
+
+        pub fn permissions(&self) -> Vec<String> {
+            if let Some(user) = &self.user {
+                return user.permissions()
+            }
+
+            if let Some(role) = &self.role {
+                return role.permissions()
+            }
+
+            vec![]
+        }
+    }
+
     #[derive(Debug, Serialize)]
     pub struct UserNode {
         pub user: User,
@@ -447,6 +473,34 @@ pub mod tree {
         pub permissions: Option<Vec<PermissionNode>>,
     }
 
+    impl UserNode {
+        pub fn roles(&self) -> Vec<String> {
+            match &self.roles {
+                Some(roles) => roles.iter().map(|r| r.roles()).flatten().collect(),
+                None => vec![],
+            }
+        }
+
+        pub fn permissions(&self) -> Vec<String> {
+            let mut results = vec![];
+
+            if let Some(roles) = &self.roles {
+                let mut strings = roles.iter().map(|r| r.permissions()).flatten().collect();
+
+                results.append(&mut strings);
+            }
+
+            if let Some(permissions) = &self.permissions {
+                let mut strings = permissions.iter().map(|p| p.permission.to_string()).collect();
+
+                results.append(&mut strings);
+            }
+
+            results
+        }
+    }
+
+
     #[derive(Debug, Serialize)]
     pub struct RoleNode {
         pub role: Role,
@@ -455,6 +509,50 @@ pub mod tree {
         #[serde(skip_serializing_if = "Option::is_none")]
         pub permissions: Option<Vec<PermissionNode>>,
         pub grant: GrantType,
+    }
+
+    impl RoleNode {
+        pub fn roles(&self) -> Vec<String> {
+            let mut roles = match &self.roles {
+                Some(roles) => roles.iter().map(|r| r.roles()).flatten().collect(),
+                None => vec![],
+            };
+
+            roles.push(self.role.name.clone());
+
+            roles
+        }
+
+        pub fn permissions(&self) -> Vec<String> {
+            let mut results = vec![];
+
+            if let Some(roles) = &self.roles {
+                let mut strings = roles.iter().map(|r| r.permissions()).flatten().collect();
+
+                results.append(&mut strings);
+            }
+
+            if let Some(permissions) = &self.permissions {
+                let mut strings = permissions.iter().map(|p| p.permission.to_string()).collect();
+
+                results.append(&mut strings);
+            }
+
+            results
+        }
+    }
+
+    #[derive(Debug, Serialize)]
+    pub struct CondensedRoot {
+        roles: Option<Vec<CondensedRole>>,
+        permissions: Option<Vec<String>>,
+    }
+
+    #[derive(Debug, Serialize)]
+    pub struct CondensedRole {
+        role: String,
+        roles: Option<Vec<CondensedRole>>,
+        permissions: Option<Vec<String>>,
     }
 
     #[derive(Debug, Serialize)]

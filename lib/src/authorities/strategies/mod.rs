@@ -41,6 +41,8 @@ pub trait Authority: Sync {
     type AuthParams;
     type RegisterParams: Send;
 
+    fn new(pool: &Pool) -> Result<Self> where Self: Sized;
+
     fn pool(&self) -> Pool;
 
     fn user_values(&self, authority: &AuthorityRow, params: Self::RegisterParams) -> Result<(UserCreate, JsonValue)>;

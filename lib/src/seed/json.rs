@@ -288,12 +288,7 @@ pub async fn seed_users<'a>(
 
         for user in users.iter() {
             let created = if let Some(authority) = authority {
-                let service: Box<
-                    dyn AuthorityInterface<
-                        RegisterParams = UsernamePasswordRegisterParams,
-                        AuthParams = UsernamePasswordAuthParams,
-                    >,
-                > = UsernamePasswordService::new(pool)?;
+                let service: UsernamePasswordService = AuthorityInterface::new(pool)?;
 
                 let params = (authority.client_key, user).into();
 

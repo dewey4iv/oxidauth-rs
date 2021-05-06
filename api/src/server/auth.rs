@@ -1,6 +1,6 @@
 use super::common::Response;
 use actix_web::{web, HttpResponse};
-use lib::authorities::strategies::Authority;
+use lib::{User, authorities::strategies::Authority};
 use lib::db::pg::Pool;
 use lib::result::{Error, Result};
 use lib::{
@@ -29,47 +29,22 @@ enum AuthParams {
     UsernamePassword(UsernamePasswordAuthParams),
 }
 
-async fn register(pool: web::Data<Pool>, params: web::Json<RegisterParams>) -> HttpResponse {
-    let params = params.into_inner();
-
-    let result = match params {
-        RegisterParams::UsernamePassword(params) => register_username_password(&pool, params).await,
+async fn register(service: web::Data<UsernamePasswordService>, params: web::Json<RegisterParams>) -> HttpResponse {
+    use RegisterParams::*;
+    let result = match params.into_inner() {
+        UsernamePassword(params) => service.register(params.client_key, params).await,
     };
 
     Response::from_result(result).json()
 }
 
-async fn register_username_password(
-    pool: &Pool,
-    params: UsernamePasswordRegisterParams,
-) -> Result<lib::User> {
-    let result = UsernamePasswordService::new(pool)?
-        .register(params.client_key, params)
-        .await?;
-
-    Ok(result)
-}
-
-async fn authenticate(pool: web::Data<Pool>, params: web::Json<AuthParams>) -> HttpResponse {
-    let params = params.into_inner();
-
+async fn authenticate(service: web::Data<UsernamePasswordService>, params: web::Json<AuthParams>) -> HttpResponse {
     use AuthParams::*;
-    let result = match params {
-        UsernamePassword(params) => authenticate_username_password(&pool, params).await,
+    let result = match params.into_inner() {
+        UsernamePassword(params) => service.authenticate(params).await,
     };
 
     Response::from_result(result).json()
-}
-
-async fn authenticate_username_password(
-    pool: &Pool,
-    params: UsernamePasswordAuthParams,
-) -> Result<RootNode> {
-    let result = UsernamePasswordService::new(pool)?
-        .authenticate(params)
-        .await?;
-
-    Ok(result)
 }
 
 async fn can(params: web::Json<()>) -> HttpResponse {

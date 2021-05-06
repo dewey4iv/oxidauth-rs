@@ -11,28 +11,12 @@ use crate::{
     grants::tree::RootNode,
 };
 
+#[derive(Clone)]
 pub struct AuthService {
     pool: Pool,
     authorities: AuthorityService,
     grants: GrantService,
     users: UserService,
-}
-
-impl AuthService {
-    pub fn new(pool: &Pool) -> Result<Box<dyn strategies::Authority<AuthParams = AuthParams, RegisterParams = RegisterParams>>> {
-        let authorities = AuthorityService::new(&pool)?;
-        let grants = GrantService::new(&pool)?;
-        let users = UserService::new(&pool)?;
-
-        let service = AuthService {
-            pool: pool.to_owned(),
-            authorities,
-            grants,
-            users,
-        };
-
-        Ok(Box::new(service))
-    }
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -76,6 +60,21 @@ pub struct AuthParams {
 impl strategies::Authority for AuthService {
     type RegisterParams = RegisterParams;
     type AuthParams = AuthParams;
+
+    fn new(pool: &Pool) -> Result<Self> {
+        let authorities = AuthorityService::new(&pool)?;
+        let grants = GrantService::new(&pool)?;
+        let users = UserService::new(&pool)?;
+
+        let service = AuthService {
+            pool: pool.to_owned(),
+            authorities,
+            grants,
+            users,
+        };
+
+        Ok(service)
+    }
 
     fn pool(&self) -> Pool {
         self.pool.clone()
