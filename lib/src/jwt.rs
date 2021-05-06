@@ -1,20 +1,28 @@
+use crate::User;
+use jsonwebtoken::{encode, errors, Algorithm, EncodingKey, Header};
 use serde::{Deserialize, Serialize};
-use jsonwebtoken::{ encode, Header, EncodingKey, Algorithm, errors };
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
     email: String,
     exp: usize,
+    user: Option<User>,
 }
 
 pub fn mk_token(claims: &Claims, encoding_key: &EncodingKey) -> Result<String, errors::Error> {
-    Ok(encode(&Header::new(Algorithm::RS256), claims, encoding_key)?)
+    let result = encode(
+        &Header::new(Algorithm::RS256),
+        claims,
+        encoding_key,
+    )?;
+
+    Ok(result)
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use jsonwebtoken::{ decode, DecodingKey, Validation };
+    use jsonwebtoken::{decode, DecodingKey, Validation};
     use openssl::rsa::Rsa;
     use std::ops::Add;
     use std::time;
@@ -38,6 +46,7 @@ mod tests {
         let test_claims = Claims {
             email: "a@b.c".to_string(),
             exp: exp as usize,
+            user: None,
         };
 
         let token = match encode(&Header::new(Algorithm::RS256), &test_claims, &encoding_key) {
@@ -47,17 +56,14 @@ mod tests {
             }
         };
 
-        let token_data = match decode::<Claims>(
-            &token,
-            &decoding_key,
-            &Validation::new(Algorithm::RS256)
-        ) {
-            Ok(t) => t,
-            Err(e) => {
-                eprintln!("{}", e);
-                panic!("Couldn't even decode")
-            }
-        };
+        let token_data =
+            match decode::<Claims>(&token, &decoding_key, &Validation::new(Algorithm::RS256)) {
+                Ok(t) => t,
+                Err(e) => {
+                    eprintln!("{}", e);
+                    panic!("Couldn't even decode")
+                }
+            };
 
         println!("{}", token_data.claims.email)
     }
