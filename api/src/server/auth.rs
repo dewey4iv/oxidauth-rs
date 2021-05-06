@@ -64,7 +64,7 @@ async fn authenticate(pool: web::Data<Pool>, params: web::Json<AuthParams>) -> H
 async fn authenticate_username_password(
     pool: &Pool,
     params: UsernamePasswordAuthParams,
-) -> Result<lib::tree::RootNode> {
+) -> Result<RootNode> {
     let result = UsernamePasswordService::new(pool)?
         .authenticate(params)
         .await?;

@@ -421,6 +421,8 @@ pub mod tree {
     }
 
     #[derive(Clone, Debug, Serialize)]
+    #[serde(rename_all = "snake_case")]
+    #[serde(untagged)]
     pub enum GrantType {
         UserPermission(super::UserPermission),
         UserRole(super::UserRole),
@@ -439,14 +441,18 @@ pub mod tree {
     #[derive(Debug, Serialize)]
     pub struct UserNode {
         pub user: User,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub roles: Option<Vec<RoleNode>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub permissions: Option<Vec<PermissionNode>>,
     }
 
     #[derive(Debug, Serialize)]
     pub struct RoleNode {
         pub role: Role,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub roles: Option<Vec<RoleNode>>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub permissions: Option<Vec<PermissionNode>>,
         pub grant: GrantType,
     }
