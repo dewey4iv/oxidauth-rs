@@ -1,12 +1,15 @@
 use super::common::Response;
 use actix_web::{web, HttpResponse};
-use lib::{authorities::strategies::username_password::{
-    AuthParams as UsernamePasswordAuthParams, AuthService as UsernamePasswordService,
-    RegisterParams as UsernamePasswordRegisterParams,
-}, tree::RootNode};
 use lib::authorities::strategies::Authority;
 use lib::db::pg::Pool;
 use lib::result::{Error, Result};
+use lib::{
+    authorities::strategies::username_password::{
+        AuthParams as UsernamePasswordAuthParams, AuthService as UsernamePasswordService,
+        RegisterParams as UsernamePasswordRegisterParams,
+    },
+    tree::RootNode,
+};
 
 pub fn mount(cfg: &mut web::ServiceConfig) {
     cfg.route("/register", web::post().to(register));
@@ -15,14 +18,12 @@ pub fn mount(cfg: &mut web::ServiceConfig) {
 }
 
 #[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
 #[serde(untagged)]
 enum RegisterParams {
     UsernamePassword(UsernamePasswordRegisterParams),
 }
 
 #[derive(Deserialize, Debug)]
-// #[serde(rename_all = "snake_case")]
 #[serde(untagged)]
 enum AuthParams {
     UsernamePassword(UsernamePasswordAuthParams),
