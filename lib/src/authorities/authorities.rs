@@ -169,7 +169,7 @@ impl AuthorityService {
     pub async fn user_authority_by_user_id(&self, user_id: Uuid) -> Result<Vec<UserAuthority>> {
         let user_authorities = sqlx::query_as::<_, UserAuthority>(r#"
             SELECT * FROM user_authorities
-            AND user_id = $1
+            WHERE user_id = $1
         "#)
             .bind(user_id)
             .fetch_all(&self.pool)

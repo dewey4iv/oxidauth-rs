@@ -5,7 +5,7 @@ use super::permission::Permission as PermissionRaw;
 use crate::db::pg::Pool;
 use crate::result::Result;
 
-#[derive(Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Permission {
     pub id: Uuid,
     pub realm: String,

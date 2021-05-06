@@ -9,7 +9,7 @@ use uuid::Uuid;
 use crate::db::pg::Pool;
 use crate::result::Result;
 
-#[derive(Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Role {
     pub id: Uuid,
     pub realm_id: Uuid,

@@ -65,7 +65,7 @@ impl From<RegisterParams> for (UserCreate, String, String) {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AuthParams {
     pub client_key: Uuid,
     pub username: String,
@@ -122,7 +122,7 @@ impl strategies::Authority for AuthService {
         for credential in credentials.iter() {
             let hashed = get_string_from(&credential.params, "password_digest")?;
 
-            if bcrypt::verify(format!("{}:::{}", &password, &salt), hashed)? {
+            if bcrypt::verify(format!("{}:::{}", &salt, &password), hashed)? {
                 let permission_tree = self.grants.by_user_id(authority.realm_id, user.id).await?;
 
                 return Ok(permission_tree)

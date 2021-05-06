@@ -78,7 +78,7 @@ pub async fn oxidauth_realm<'a>(
             profile: Value::Object(Map::new()),
             status: "enabled",
             kind: "human",
-            roles: None,
+            roles: Some(vec!["oxidauth:admin"]),
             permissions: None,
         }]),
         roles: Some(vec![

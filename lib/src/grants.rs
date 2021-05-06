@@ -4,7 +4,7 @@ use crate::result::Result;
 use super::permissions::permission_service::Permission;
 use uuid::Uuid;
 
-#[derive(Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserPermission {
     pub id: Uuid,
     pub realm_id: Uuid,
@@ -14,7 +14,7 @@ pub struct UserPermission {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct UserRole {
     pub id: Uuid,
     pub realm_id: Uuid,
@@ -24,7 +24,7 @@ pub struct UserRole {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct RoleRole {
     pub id: Uuid,
     pub realm_id: Uuid,
@@ -34,7 +34,7 @@ pub struct RoleRole {
     pub updated_at: NaiveDateTime,
 }
 
-#[derive(Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct RolePermission {
     pub id: Uuid,
     pub realm_id: Uuid,
@@ -44,6 +44,7 @@ pub struct RolePermission {
     pub updated_at: NaiveDateTime,
 }
 
+#[derive(Debug)]
 pub enum PermissionType {
     UserPermission(Uuid, Uuid),
     UserRole(Uuid, Uuid),
@@ -222,7 +223,7 @@ pub mod tree {
         ) -> Result<UserQueryResult> {
             let user = sqlx::query_as::<_, User>(r#"
                 SELECT * FROM users
-                WHERE user_id = $1
+                WHERE id = $1
             "#)
                 .bind(user_id)
                 .fetch_one(&self.pool);
@@ -419,7 +420,7 @@ pub mod tree {
         }
     }
 
-    #[derive(Clone, Serialize)]
+    #[derive(Clone, Debug, Serialize)]
     pub enum GrantType {
         UserPermission(super::UserPermission),
         UserRole(super::UserRole),
@@ -427,20 +428,22 @@ pub mod tree {
         RolePermission(super::RolePermission),
     }
 
-    #[derive(Serialize)]
+    #[derive(Debug, Serialize)]
     pub struct RootNode {
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub user: Option<UserNode>,
+        #[serde(skip_serializing_if = "Option::is_none")]
         pub role: Option<RoleNode>,
     }
 
-    #[derive(Serialize)]
+    #[derive(Debug, Serialize)]
     pub struct UserNode {
         pub user: User,
         pub roles: Option<Vec<RoleNode>>,
         pub permissions: Option<Vec<PermissionNode>>,
     }
 
-    #[derive(Serialize)]
+    #[derive(Debug, Serialize)]
     pub struct RoleNode {
         pub role: Role,
         pub roles: Option<Vec<RoleNode>>,
@@ -448,7 +451,7 @@ pub mod tree {
         pub grant: GrantType,
     }
 
-    #[derive(Serialize)]
+    #[derive(Debug, Serialize)]
     pub struct PermissionNode {
         pub permission: Permission,
         pub grant: GrantType,

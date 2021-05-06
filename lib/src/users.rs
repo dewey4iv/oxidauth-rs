@@ -15,7 +15,7 @@ use serde_json::value::Value as JsonValue;
 use crate::db::pg::{Pool, QueryResult};
 use crate::result::Result;
 
-#[derive(Clone, Serialize, Deserialize, sqlx::FromRow)]
+#[derive(Clone, Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct User {
     pub id: Uuid,
     pub username: String,
