@@ -1,8 +1,8 @@
 CREATE TABLE key_pairs (
     id UUID PRIMARY KEY NOT NULL DEFAULT uuid_generate_v4(),
     realm_id UUID NOT NULL,
-    public_key TEXT not null,
-    private_key TEXT not null,
+    public_key BYTEA NOT NULL,
+    private_key BYTEA NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
 

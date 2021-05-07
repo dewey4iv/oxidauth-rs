@@ -1,12 +1,44 @@
 use crate::User;
-use jsonwebtoken::{encode, errors, Algorithm, EncodingKey, Header};
+use jsonwebtoken::{decode, Algorithm, Validation, DecodingKey, EncodingKey, Header, encode, errors};
 use serde::{Deserialize, Serialize};
+use std::time;
+use std::ops::Add;
+use crate::result::Result;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
-    email: String,
-    exp: usize,
-    user: Option<User>,
+    pub email: Option<String>,
+    pub exp: usize,
+    pub grants: Vec<String>,
+}
+
+impl Claims {
+    pub fn encode(&self, encoding_key: &Vec<u8>) -> Result<String> {
+        let encoding_key = EncodingKey::from_rsa_der(encoding_key);
+
+        let result = encode(
+            &Header::new(Algorithm::RS256),
+            self,
+            &encoding_key,
+        )?;
+
+        Ok(result)
+    }
+
+    pub fn decode(token: String, decoding_key: Vec<u8>) -> Result<Claims> {
+        let decoding_key = DecodingKey::from_rsa_der(&&decoding_key);
+        let result = decode::<Claims>(&token, &decoding_key, &Validation::new(Algorithm::RS256))?;
+
+        Ok(result.claims)
+    }
+}
+
+pub fn exp(duration: time::Duration) -> usize {
+    time::SystemTime::now()
+        .duration_since(time::UNIX_EPOCH)
+        .expect("unable to get the current time")
+        .add(duration)
+        .as_secs() as usize
 }
 
 pub fn mk_token(claims: &Claims, encoding_key: &EncodingKey) -> Result<String, errors::Error> {
@@ -44,9 +76,9 @@ mod tests {
             .as_secs();
 
         let test_claims = Claims {
-            email: "a@b.c".to_string(),
+            email: Some("a@b.c".to_string()),
             exp: exp as usize,
-            user: None,
+            grants: vec![],
         };
 
         let token = match encode(&Header::new(Algorithm::RS256), &test_claims, &encoding_key) {

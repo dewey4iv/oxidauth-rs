@@ -4,6 +4,7 @@ use bcrypt;
 use serde_json::value::{Map, Value as JsonValue};
 use uuid::Uuid;
 
+use crate::{RealmService, jwt};
 use crate::db::pg::Pool;
 use crate::{
     authorities::strategies, authorities::AuthorityService, permission_service::Permission,
@@ -14,6 +15,7 @@ use crate::{
 #[derive(Clone)]
 pub struct AuthService {
     pool: Pool,
+    realms: RealmService,
     authorities: AuthorityService,
     grants: GrantService,
     users: UserService,
@@ -62,12 +64,14 @@ impl strategies::Authority for AuthService {
     type AuthParams = AuthParams;
 
     fn new(pool: &Pool) -> Result<Self> {
+        let realms = RealmService::new(&pool)?;
         let authorities = AuthorityService::new(&pool)?;
         let grants = GrantService::new(&pool)?;
         let users = UserService::new(&pool)?;
 
         let service = AuthService {
             pool: pool.to_owned(),
+            realms,
             authorities,
             grants,
             users,
@@ -104,7 +108,7 @@ impl strategies::Authority for AuthService {
         Ok((user_create, JsonValue::Object(params)))
     }
 
-    async fn authenticate(&self, params: Self::AuthParams) -> Result<RootNode> {
+    async fn authenticate(&self, params: Self::AuthParams) -> Result<String> {
         let AuthParams {
             client_key,
             username,
@@ -112,8 +116,8 @@ impl strategies::Authority for AuthService {
         } = params;
 
         let user = self.users.by_username(username).await?;
-
         let authority = self.authorities.by_client_key(client_key).await?;
+        let keys = RealmService::key_pairs_by_id_query(&self.pool, authority.realm_id).await?;
         let salt = get_string_from(&authority.params, "password_salt")?;
 
         let credentials = self.authorities.user_authority_by_user_id(user.id).await?;
@@ -124,7 +128,17 @@ impl strategies::Authority for AuthService {
             if bcrypt::verify(format!("{}:::{}", &salt, &password), hashed)? {
                 let permission_tree = self.grants.by_user_id(authority.realm_id, user.id).await?;
 
-                return Ok(permission_tree)
+                let grants = permission_tree.permissions();
+
+                let claims = jwt::Claims {
+                    email: user.email,
+                    exp: jwt::exp(std::time::Duration::from_secs(60 * 20)),
+                    grants,
+                };
+
+                let result = claims.encode(&keys.last().unwrap().private_key)?;
+
+                return Ok(result)
             }
         }
 

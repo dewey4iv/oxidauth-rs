@@ -1,19 +1,15 @@
 use async_trait::async_trait;
-use uuid::Uuid;
 use serde_json::value::Value as JsonValue;
 use std::fmt;
+use uuid::Uuid;
 
-use crate::result::Result;
 use crate::{
-    AuthorityService,
-    Authority as AuthorityRow,
-    User,
-    UserAuthorityCreate,
-    UserCreate,
+    result::Result,
+    db::pg::Pool, grants::tree::RootNode, permission_service::Permission,
+    Authority as AuthorityRow, AuthorityService, User, UserAuthorityCreate, UserCreate,
     UserService,
-    db::pg::Pool,
-    permission_service::Permission,
-    grants::tree::RootNode,
+    RealmService,
+    jwt::Claims,
 };
 
 pub mod username_password;
@@ -41,13 +37,19 @@ pub trait Authority: Sync {
     type AuthParams;
     type RegisterParams: Send;
 
-    fn new(pool: &Pool) -> Result<Self> where Self: Sized;
+    fn new(pool: &Pool) -> Result<Self>
+    where
+        Self: Sized;
 
     fn pool(&self) -> Pool;
 
-    fn user_values(&self, authority: &AuthorityRow, params: Self::RegisterParams) -> Result<(UserCreate, JsonValue)>;
+    fn user_values(
+        &self,
+        authority: &AuthorityRow,
+        params: Self::RegisterParams,
+    ) -> Result<(UserCreate, JsonValue)>;
 
-    async fn authenticate(&self, params: Self::AuthParams) -> Result<RootNode>;
+    async fn authenticate(&self, params: Self::AuthParams) -> Result<String>;
 
     async fn register(&self, client_key: Uuid, params: Self::RegisterParams) -> Result<User> {
         let pool = self.pool();
@@ -78,5 +80,13 @@ pub trait Authority: Sync {
         tx.commit().await?;
 
         Ok(user)
+    }
+
+    async fn fetch_key_pairs(&self, realm_id: Uuid) -> Result<()> {
+        let pool = self.pool();
+
+        let results = RealmService::key_pairs_by_id_query(&pool, realm_id).await?;
+
+        Ok(())
     }
 }

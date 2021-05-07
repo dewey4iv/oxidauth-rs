@@ -1,4 +1,5 @@
 use chrono::NaiveDateTime;
+use openssl::rsa::Rsa;
 use uuid::Uuid;
 
 use crate::db::pg::Pool;
@@ -67,6 +68,8 @@ impl RealmService {
             .fetch_one(&self.pool)
             .await?;
 
+        self.create_key_pair(result.id).await?;
+
         Ok(result)
     }
 
@@ -87,5 +90,67 @@ impl RealmService {
 
     pub async fn delete(&self, id: Uuid) -> Result<()> {
         todo!()
+    }
+
+    pub async fn create_key_pair(&self, realm_id: Uuid) -> Result<KeyPair> {
+        let key_pair = KeyPair::new(realm_id)?;
+
+        let results = sqlx::query_as::<_, KeyPair>(r#"
+            INSERT INTO key_pairs
+            (realm_id, public_key, private_key)
+            VALUES ($1, $2, $3)
+            RETURNING *;
+        "#)
+            .bind(realm_id)
+            .bind(key_pair.public_key)
+            .bind(key_pair.private_key)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(results)
+    }
+
+    pub async fn key_pairs_by_id_query(pool: &Pool, realm_id: Uuid) -> Result<Vec<KeyPair>> {
+        let results = sqlx::query_as::<_, KeyPair>(r#"
+            SELECT * FROM key_pairs
+            WHERE realm_id = $1
+        "#)
+            .bind(realm_id)
+            .fetch_all(pool)
+            .await?;
+
+        Ok(results)
+    }
+}
+
+#[derive(Serialize, sqlx::FromRow)]
+pub struct KeyPair {
+    pub id: Uuid,
+    pub realm_id: Uuid,
+    pub public_key: Vec<u8>,
+    pub private_key: Vec<u8>,
+    pub created_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime>,
+}
+
+#[derive(Serialize, sqlx::FromRow)]
+pub struct KeyPairCreate {
+    pub realm_id: Uuid,
+    pub public_key: Vec<u8>,
+    pub private_key: Vec<u8>,
+}
+
+impl KeyPair {
+    pub fn new(realm_id: Uuid) -> Result<KeyPairCreate> {
+        let rsa = Rsa::generate(4096)?;
+
+        let public_key = rsa.private_key_to_der()?;
+        let private_key = rsa.private_key_to_der()?;
+
+        Ok(KeyPairCreate {
+            realm_id,
+            public_key,
+            private_key,
+        })
     }
 }
