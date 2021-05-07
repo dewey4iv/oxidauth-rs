@@ -72,7 +72,7 @@ mod tests {
         let exp = time::SystemTime::now()
             .duration_since(time::UNIX_EPOCH)
             .expect("unable to get the current time")
-            .add(time::Duration::from_secs(60 * 20)) // 20 min
+            .add(time::Duration::from_secs(60 * 20))
             .as_secs();
 
         let test_claims = Claims {
