@@ -1,0 +1,75 @@
+---
+kind: pipeline
+type: docker
+name: build-start-notification
+
+steps:
+  - name: build-start
+    image: plugins/slack
+    settings:
+      webhook:
+        from_secret: slack_webhook
+      channel: tech
+      link_names: true
+      template: >
+        build for {{build.branch}} started.
+
+trigger:
+  branch:
+    include:
+    - production
+    - staging
+
+
+---
+kind: pipeline
+type: docker
+name: oxidauth-binary
+
+steps:
+  - name: version-tag
+    image: alpine
+    commands:
+      - cat api/Cargo.toml | grep version | head -1 | cut -d'"' -f 2 > .tags
+
+  - name: oxidauth-api
+    image: plugins/docker
+    settings:
+      registry: registry.vizerapp.dev
+      repo: registry.vizerapp.dev/lib/oxidauth-api
+      target: production
+      dockerfile: Dockerfile
+      username:
+        from_secret: docker_username
+      password:
+        from_secret: docker_password
+      environment:
+        - DOCKER_BUILDKIT: 1
+
+  - name: build-completed 
+    image: plugins/slack
+    when:
+      status:
+        - failure
+        - success
+    settings:
+      webhook:
+        from_secret: slack_webhook
+      channel: tech
+      link_names: true
+      template: >
+        {{#success build.status}}
+          oxidauth:{{build.branch}} has finished building.
+          took: {{since build.started}}
+          {{build.link}}
+        {{else}}
+          api:{{build.branch}} has failed to build.
+          {{build.link}}
+        {{/success}}
+
+trigger:
+  branch:
+    include:
+    - production
+    - staging
+    - release/**

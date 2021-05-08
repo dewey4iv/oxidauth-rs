@@ -1,6 +1,6 @@
 [package]
 name = "api"
-version = "0.1.0"
+version = "2021.19.0"
 authors = ["George Wheeler <george@dewey4.com>"]
 edition = "2018"
 
