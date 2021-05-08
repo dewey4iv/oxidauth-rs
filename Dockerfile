@@ -32,11 +32,21 @@ COPY . .
 RUN cargo build --release --target-dir /target --bin api
 
 
+###################
+# Production Base #
+###################
+
+FROM debian AS production-base
+RUN apt update -y && \
+    apt upgrade -y && \
+    apt install -y pkg-config build-essential openssl libssl-dev
+
+
 ######################
 # Production Package #
 ######################
 
-FROM debian AS production
+FROM production-base AS production
 COPY --from=builder /target/release/api /bin
 RUN mkdir uploads
 CMD ["/bin/api"]
