@@ -48,7 +48,7 @@ RUN apt update -y && \
 
 FROM production-base AS production
 COPY --from=builder /target/release/api /bin
-CMD ["/bin/api"]
+CMD ["/bin/api", "server"]
 
 
 ###############
