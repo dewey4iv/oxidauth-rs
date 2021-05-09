@@ -12,7 +12,7 @@ steps:
       channel: tech
       link_names: true
       template: >
-        build for {{build.branch}} started.
+        oxidauth build for {{build.branch}} started.
 
 trigger:
   branch:
@@ -59,11 +59,11 @@ steps:
       link_names: true
       template: >
         {{#success build.status}}
-          oxidauth:{{build.branch}} has finished building.
+          oxidauth {{build.branch}} has finished building.
           took: {{since build.started}}
           {{build.link}}
         {{else}}
-          api:{{build.branch}} has failed to build.
+          oxidauth {{build.branch}} has failed to build.
           {{build.link}}
         {{/success}}
 
