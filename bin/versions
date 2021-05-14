@@ -1,0 +1,57 @@
+#!/bin/bash -
+#===============================================================================
+#
+#          FILE: deploy.sh
+#
+#         USAGE: ./deploy.sh
+#
+#   DESCRIPTION:
+#
+#       OPTIONS: ---
+#  REQUIREMENTS: ---
+#          BUGS: ---
+#         NOTES: ---
+#        AUTHOR: YOUR NAME (),
+#  ORGANIZATION:
+#       CREATED: 05/05/2021 13:08
+#      REVISION:  ---
+#===============================================================================
+
+set -o nounset                              # Treat unset variables as an error
+
+NEW_YEAR=$(date +%Y)
+NEW_WEEK=$(expr $(date +%V) + 1)
+
+declare -a CARGO_FILES=("api/Cargo.toml" "horae/Cargo.toml")
+declare -a PACKAGE_FILES=("admin-web/package.json")
+
+get_version () {
+    echo "$(cat $1 | grep version | head -1 | cut -d'"' -f $2)"
+}
+
+bump() {
+    for f in $1; do
+        CURRENT_VERSION=$(get_version $f $2)
+        declare -a PARTS=($(echo $CURRENT_VERSION | tr '.' ' '))
+        CURRENT_YEAR=${PARTS[0]}
+        CURRENT_WEEK=${PARTS[1]}
+        NEW_MINOR=0
+        
+        if [ "$NEW_YEAR" == "$CURRENT_YEAR" ] && [ "$NEW_WEEK" == "$CURRENT_WEEK" ]; then
+            NEW_MINOR=$(expr ${PARTS[2]} + 1)
+        fi
+
+        NEW_VERSION="${NEW_YEAR}.${NEW_WEEK}.${NEW_MINOR}"
+
+        echo "$f
+        $CURRENT_VERSION -> $NEW_VERSION"
+
+        sed -i "" -e "1 s/$CURRENT_VERSION/$NEW_VERSION/; t" -e "1,// s//$NEW_VERSION/" $f
+    done
+}
+
+bump "api/Cargo.toml" 2
+bump "horae/Cargo.toml" 2
+bump "admin-web/package.json" 4
+
+cargo check -q 2> /dev/null
