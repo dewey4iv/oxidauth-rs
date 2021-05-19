@@ -1,10 +1,12 @@
 use chrono::NaiveDateTime;
+use openssl::base64;
 use uuid::Uuid;
 use serde_json::value::Value as JsonValue;
 
 use crate::db::pg::{Pool, QueryResult};
 use crate::result::{Result, Context};
 use super::strategies::StrategyType;
+use crate::{RealmService, KeyPair, PublicKey};
 
 #[derive(Debug, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Authority {
@@ -93,6 +95,25 @@ impl AuthorityService {
         Ok(result)
     }
 
+    pub async fn key_pairs_by_client_key(&self, client_key: Uuid) -> Result<Vec<PublicKey>> {
+        let results = sqlx::query_as::<_, KeyPair>(r#"
+            SELECT key_pairs.* FROM authorities
+            JOIN realms ON realms.id = authorities.realm_id
+            JOIN key_pairs ON key_pairs.realm_id = realms.id
+            WHERE authorities.client_key = $1
+        "#)
+            .bind(client_key)
+            .fetch_all(&self.pool)
+            .await?;
+
+        let public_keys = results
+            .into_iter()
+            .map(|pair| pair.into())
+            .collect();
+
+        Ok(public_keys)
+    }
+
     pub async fn create(&self, authority: AuthorityCreate) -> Result<Authority> {
         // let a = authority.clone();
         //
@@ -111,8 +132,6 @@ impl AuthorityService {
         //     .await?;
         //
         // println!("{:?}", result);
-
-        println!("{:?}", authority);
 
         let result = sqlx::query_as::<_, Authority>(r#"
             INSERT INTO authorities
