@@ -14,7 +14,7 @@ pub struct Claims {
 
 impl Claims {
     pub fn encode(&self, encoding_key: &Vec<u8>) -> Result<String> {
-        let encoding_key = EncodingKey::from_rsa_der(encoding_key);
+        let encoding_key = EncodingKey::from_rsa_pem(encoding_key).unwrap();
 
         let result = encode(
             &Header::new(Algorithm::RS256),
@@ -26,7 +26,7 @@ impl Claims {
     }
 
     pub fn decode(token: String, decoding_key: Vec<u8>) -> Result<Claims> {
-        let decoding_key = DecodingKey::from_rsa_der(&&decoding_key);
+        let decoding_key = DecodingKey::from_rsa_pem(&&decoding_key).unwrap();
         let result = decode::<Claims>(&token, &decoding_key, &Validation::new(Algorithm::RS256))?;
 
         Ok(result.claims)

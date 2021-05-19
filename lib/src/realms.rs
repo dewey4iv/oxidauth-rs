@@ -1,5 +1,6 @@
 use chrono::NaiveDateTime;
 use openssl::rsa::Rsa;
+use openssl::base64;
 use uuid::Uuid;
 
 use crate::db::pg::Pool;
@@ -123,7 +124,7 @@ impl RealmService {
     }
 }
 
-#[derive(Serialize, sqlx::FromRow)]
+#[derive(Clone, Serialize, sqlx::FromRow)]
 pub struct KeyPair {
     pub id: Uuid,
     pub realm_id: Uuid,
@@ -140,12 +141,33 @@ pub struct KeyPairCreate {
     pub private_key: Vec<u8>,
 }
 
+#[derive(Serialize)]
+pub struct PublicKey {
+    pub id: Uuid,
+    pub realm_id: Uuid,
+    pub public_key: String,
+    pub created_at: Option<NaiveDateTime>,
+    pub updated_at: Option<NaiveDateTime>,
+}
+
+impl From<KeyPair> for PublicKey {
+    fn from(from: KeyPair) -> Self {
+        Self {
+            id: from.id,
+            realm_id: from.realm_id,
+            public_key: base64::encode_block(&from.public_key),
+            created_at: from.created_at,
+            updated_at: from.updated_at,
+        }
+    }
+}
+
 impl KeyPair {
     pub fn new(realm_id: Uuid) -> Result<KeyPairCreate> {
         let rsa = Rsa::generate(4096)?;
 
-        let public_key = rsa.private_key_to_der()?;
-        let private_key = rsa.private_key_to_der()?;
+        let public_key = rsa.public_key_to_pem()?;
+        let private_key = rsa.private_key_to_pem()?;
 
         Ok(KeyPairCreate {
             realm_id,

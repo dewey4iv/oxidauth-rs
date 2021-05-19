@@ -2,7 +2,6 @@
 #[macro_use] extern crate futures;
 #[macro_use] extern crate serde_derive;
 
-pub mod auth;
 pub mod jwt;
 pub mod rsa;
 pub mod authorities;
@@ -15,7 +14,6 @@ pub mod result;
 pub mod roles;
 pub mod users;
 
-pub use auth::*;
 pub use authorities::*;
 pub use db::*;
 pub use grants::*;
