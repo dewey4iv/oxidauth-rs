@@ -1,6 +1,7 @@
+use uuid::Uuid;
 use super::common::Response;
 use actix_web::{web, HttpResponse};
-use lib::{User, authorities::strategies::Authority};
+use lib::{AuthorityService, User, authorities::strategies::Authority};
 use lib::db::pg::Pool;
 use lib::result::{Error, Result};
 use lib::{
@@ -14,6 +15,7 @@ use lib::{
 pub fn mount(cfg: &mut web::ServiceConfig) {
     cfg.route("/register", web::post().to(register));
     cfg.route("/authenticate", web::post().to(authenticate));
+    cfg.route("/public_keys/{client_key}", web::get().to(public_keys));
     cfg.route("/can/{challenge}", web::get().to(can));
 }
 
@@ -43,6 +45,12 @@ async fn authenticate(service: web::Data<UsernamePasswordService>, params: web::
     let result = match params.into_inner() {
         UsernamePassword(params) => service.authenticate(params).await,
     };
+
+    Response::from_result(result).json()
+}
+
+async fn public_keys(service: web::Data<AuthorityService>, params: web::Path<Uuid>) -> HttpResponse {
+    let result = service.key_pairs_by_client_key(params.into_inner()).await;
 
     Response::from_result(result).json()
 }
