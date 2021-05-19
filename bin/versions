@@ -22,8 +22,7 @@ set -o nounset                              # Treat unset variables as an error
 NEW_YEAR=$(date +%Y)
 NEW_WEEK=$(expr $(date +%V) + 1)
 
-declare -a CARGO_FILES=("api/Cargo.toml" "horae/Cargo.toml")
-declare -a PACKAGE_FILES=("admin-web/package.json")
+declare -a CARGO_FILES=("api/Cargo.toml")
 
 get_version () {
     echo "$(cat $1 | grep version | head -1 | cut -d'"' -f $2)"
@@ -51,7 +50,5 @@ bump() {
 }
 
 bump "api/Cargo.toml" 2
-bump "horae/Cargo.toml" 2
-bump "admin-web/package.json" 4
 
 cargo check -q 2> /dev/null
