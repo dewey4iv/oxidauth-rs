@@ -7,6 +7,8 @@ use crate::result::Result;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Claims {
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
     pub email: Option<String>,
     pub exp: usize,
     pub grants: Vec<String>,

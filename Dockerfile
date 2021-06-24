@@ -48,6 +48,8 @@ RUN apt update -y && \
 
 FROM production-base AS production
 COPY --from=builder /target/release/api /bin
+COPY setup.sh /bin/setup.sh
+COPY compose-setup.sh /bin/compose-setup.sh
 CMD ["/bin/api", "server"]
 
 

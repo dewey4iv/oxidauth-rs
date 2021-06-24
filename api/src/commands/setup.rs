@@ -7,14 +7,13 @@ use lib::seed;
 
 pub async fn cmd(args: Option<&ArgMatches<'_>>) -> Result<()> {
     let database_args = common::database_args(args)?.into();
-    let (username, password, password_salt, seed_files) = setup_args(args)?;
-    let email = "admin@example.com";
+    let (username, email, password, password_salt, client_key, seed_files) = setup_args(args)?;
     let first_name = "admin";
     let last_name = "admin";
 
     let pool = pg::new(database_args).await?;
 
-    seed::oxidauth_realm(&pool, username, password, email, first_name, last_name)
+    seed::oxidauth_realm(&pool, username, password, email, first_name, last_name, password_salt, client_key)
         .await
         .context("unable to seed oxidauth base data")?;
 
@@ -42,6 +41,12 @@ pub fn cfg() -> Config<'static, 'static> {
                 .env("OXIDAUTH_DEFAULT_USERNAME"),
         )
         .arg(
+            Arg::with_name("email")
+                .long("email")
+                .short("e")
+                .env("OXIDAUTH_DEFAULT_EMAIL"),
+        )
+        .arg(
             Arg::with_name("password")
                 .long("password")
                 .short("p")
@@ -52,6 +57,12 @@ pub fn cfg() -> Config<'static, 'static> {
                 .long("password-salt")
                 .short("s")
                 .env("OXIDAUTH_DEFAULT_PASSWORD_SALT"),
+        )
+        .arg(
+            Arg::with_name("client-key")
+                .long("client-key")
+                .short("k")
+                .env("OXIDAUTH_DEFAULT_CLIENT_KEY"),
         )
         .arg(
             Arg::with_name("seed-files")
@@ -66,7 +77,7 @@ pub fn cfg() -> Config<'static, 'static> {
 
 fn setup_args<'a>(
     args: Option<&'a ArgMatches<'_>>,
-) -> Result<(&'a str, &'a str, &'a str, Option<&'a str>)> {
+) -> Result<(&'a str, &'a str, &'a str, &'a str, &'a str, Option<&'a str>)> {
     if args.is_none() {
         return Err(Error::msg("missing args for setup_args"));
     }
@@ -77,6 +88,10 @@ fn setup_args<'a>(
         .value_of("username")
         .ok_or_else(|| Error::msg("no username provided"))?;
 
+    let email = args
+        .value_of("email")
+        .ok_or_else(|| Error::msg("no email provided"))?;
+
     let password = args
         .value_of("password")
         .ok_or_else(|| Error::msg("no password provided"))?;
@@ -85,7 +100,11 @@ fn setup_args<'a>(
         .value_of("password-salt")
         .ok_or_else(|| Error::msg("no password salt provided"))?;
 
+    let client_key = args
+        .value_of("client-key")
+        .ok_or_else(|| Error::msg("no client-key provided"))?;
+
     let seed_files = args.value_of("seed-files");
 
-    Ok((username, password, password_salt, seed_files))
+    Ok((username, email, password, password_salt, client_key, seed_files))
 }
