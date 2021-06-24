@@ -131,6 +131,8 @@ impl strategies::Authority for AuthService {
                 let grants = permission_tree.permissions();
 
                 let claims = jwt::Claims {
+                    first_name: user.first_name,
+                    last_name: user.last_name,
                     email: user.email,
                     exp: jwt::exp(std::time::Duration::from_secs(60 * 20)),
                     grants,

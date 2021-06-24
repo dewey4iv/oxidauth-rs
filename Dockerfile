@@ -37,7 +37,7 @@ RUN cargo build --release --target-dir /target --bin api
 ###################
 
 FROM debian AS production-base
-RUN apt update -y && \
+RUN apt update -y --fix-missing && \
     apt upgrade -y && \
     apt install -y pkg-config build-essential openssl libssl-dev
 
@@ -48,6 +48,8 @@ RUN apt update -y && \
 
 FROM production-base AS production
 COPY --from=builder /target/release/api /bin
+COPY setup.sh /bin/setup.sh
+COPY compose-setup.sh /bin/compose-setup.sh
 CMD ["/bin/api", "server"]
 
 

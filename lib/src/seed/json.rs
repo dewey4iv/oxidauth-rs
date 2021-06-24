@@ -21,27 +21,6 @@ use crate::result::{Context, Error, Result};
 use crate::roles::{Role as RoleRow, RoleCreate, RoleService};
 use crate::users::{User as UserRow, UserCreate, UserService};
 
-const JSON: &str = r#"
-{
-    "name": "oxidauth",
-    "users": [
-        {
-            "username": "", "email": "", "first_name": "", "last_name": "",
-            "profile": "", "status": "", "kind": "",
-            "roles": [],
-            "permissions": ["", "", ""]
-        },
-    ],
-    "roles": [
-        {
-            "name": "",
-            "roles": [],
-            "permissions": []
-        }
-    ],
-}
-"#;
-
 pub async fn oxidauth_realm<'a>(
     pool: &Pool,
     username: &'a str,
@@ -49,14 +28,16 @@ pub async fn oxidauth_realm<'a>(
     email: &'a str,
     first_name: &'a str,
     last_name: &'a str,
+    password_salt: &'a str,
+    client_key: &'a str,
 ) -> Result<()> {
     let mut authority_params = Map::new();
     authority_params.insert(
         "password_salt".to_string(),
-        JsonValue::String("saltysalt".to_string()),
+        JsonValue::String(password_salt.to_string()),
     );
 
-    let client_key = Uuid::parse_str("fd9202fc-1bff-41f4-bd90-939182836152")?;
+    let client_key = Uuid::parse_str(client_key)?;
 
     let mut oxidauth = Realm {
         id: None,
