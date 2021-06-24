@@ -83,8 +83,6 @@ pub async fn oxidauth_realm<'a>(
 
     seed(pool, &mut oxidauth).await?;
 
-    pool.close().await;
-
     Ok(())
 }
 
