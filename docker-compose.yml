@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   oxidauth:
-    image: registry.vizerapp.dev/lib/oxidauth-api:2021.26.3
+    image: registry.vizerapp.dev/lib/oxidauth-api:2021.26.6
     stdin_open: true
     tty: true
     ports:
@@ -16,12 +16,14 @@ services:
       - oxidauth-postgres
 
   oxidauth-setup:
-    image: registry.vizerapp.dev/lib/oxidauth-api:2021.26.3
-    command: /bin/bash -c "/bin/setup.sh"
+    image: registry.vizerapp.dev/lib/oxidauth-api:2021.26.6
+    command: /bin/compose-setup.sh
     stdin_open: true
     tty: true
     env_file:
       - .env
+    volumes:
+      - 'oxidauth-etc-oxidauth:/etc/oxidauth'
     links:
       - oxidauth-postgres
     depends_on:
@@ -45,3 +47,4 @@ services:
 
 volumes:
   oxidauth-postgres-vol:
+  oxidauth-etc-oxidauth:
