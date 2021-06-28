@@ -33,7 +33,7 @@ features = [
         "migrate",
         "postgres",
         "mysql",
-        "runtime-actix-rustls",
+        "runtime-actix-native-tls",
         "tls",
         "uuid",
 ]
