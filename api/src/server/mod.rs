@@ -1,9 +1,11 @@
 use actix_cors::Cors;
 use actix_web::{web, App, HttpServer, HttpResponse}; 
-use lib::db::pg;
-use lib::result::Result;
 use std::fmt::Debug;
 use std::net::ToSocketAddrs;
+
+use lib::middleware::Jwt;
+use lib::db::pg;
+use lib::result::Result;
 use lib::authorities::strategies::{
     self,
     username_password,
@@ -33,6 +35,14 @@ pub async fn start<T: ToSocketAddrs + Debug>(bind: T, database_args: pg::Args<'_
     HttpServer::new(move || {
         let pool = web::Data::new(pool.clone());
 
+        let skip_paths = vec![
+            "/register".into(),
+            "/authenticate".into(),
+        ];
+
+        let jwt_middleware = Jwt::new(authority_service.clone(), skip_paths);
+        let cors_middleware = Cors::permissive();
+
         let username_password = web::Data::new(username_password.clone());
 
         let authority_service = web::Data::new(authority_service.clone());
@@ -42,9 +52,8 @@ pub async fn start<T: ToSocketAddrs + Debug>(bind: T, database_args: pg::Args<'_
         let role_service = web::Data::new(role_service.clone());
         let user_service = web::Data::new(user_service.clone());
 
-        let cors_middleware = Cors::permissive();
-
         App::new()
+            .wrap(jwt_middleware)
             .wrap(cors_middleware)
             .app_data(pool)
             .app_data(username_password)

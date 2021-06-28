@@ -1,5 +1,5 @@
 use uuid::Uuid;
-use super::common::Response;
+use lib::http_response::Response;
 use actix_web::{web, HttpResponse};
 use lib::{AuthorityService, User, authorities::strategies::Authority};
 use lib::db::pg::Pool;

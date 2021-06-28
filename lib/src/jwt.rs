@@ -78,6 +78,8 @@ mod tests {
             .as_secs();
 
         let test_claims = Claims {
+            first_name: Some("Bob".to_string()),
+            last_name: Some("Dylan".to_string()),
             email: Some("a@b.c".to_string()),
             exp: exp as usize,
             grants: vec![],

@@ -60,3 +60,14 @@ CMD ["/bin/api", "server"]
 FROM builder AS ci-build
 RUN cargo build
 RUN cargo test
+
+
+#####################
+# Local Development #
+#####################
+
+FROM cacher AS dev 
+RUN cargo install cargo-watch
+COPY setup.sh /bin/setup.sh
+COPY compose-setup.sh /bin/compose-setup.sh
+RUN cargo build

@@ -2,40 +2,57 @@ version: '2.1'
 
 services:
   oxidauth:
-    image: registry.vizerapp.dev/lib/oxidauth-api:2021.26.6
+    command: cargo watch -c -w lib -w api -x 'run --bin api server'
+    build:
+      dockerfile: Dockerfile
+      context: .
+    platform: "${DOCKER_PLATFORM:-linux/amd64}"
     stdin_open: true
     tty: true
     ports:
-      - "8084:80"
+      - "${API_PORT:-8080}:80"
     env_file:
       - .env
+    environment:
+      DATABASE_URL: "postgres://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST}:5432/${DATABASE_NAME}"
+    volumes:
+      - './:/app'
+      - 'oxidauth-target:/app/target'
     links:
       - oxidauth-postgres
     depends_on:
       - oxidauth-setup
       - oxidauth-postgres
 
-  oxidauth-setup:
-    image: registry.vizerapp.dev/lib/oxidauth-api:2021.26.6
-    command: /bin/compose-setup.sh
-    stdin_open: true
-    tty: true
-    env_file:
-      - .env
-    volumes:
-      - 'oxidauth-etc-oxidauth:/etc/oxidauth'
-    links:
-      - oxidauth-postgres
-    depends_on:
-      - oxidauth-postgres
+  # oxidauth-setup:
+  #   command: /bin/compose-setup.sh
+  #   build:
+  #     dockerfile: Dockerfile
+  #     context: .
+  #   platform: "${PLATFORM}"
+  #   stdin_open: true
+  #   tty: true
+  #   env_file:
+  #     - .env
+  #   volumes:
+  #     - 'oxidauth-etc-oxidauth:/etc/oxidauth'
+  #   links:
+  #     - oxidauth-postgres
+  #   depends_on:
+  #     - oxidauth-postgres
 
   oxidauth-postgres:
     command: ["postgres", "-c", "log_statement=all"]
     image: postgres:13.2
+    platform: "${DOCKER_PLATFORM:-linux/amd64}"
     env_file:
       - .env
+    environment:
+      POSTGRES_DB: "${DATABASE_NAME}"
+      POSTGRES_USER: "${DATABASE_USERNAME}"
+      POSTGRES_PASSWORD: "${DATABASE_PASSWORD}"
     ports:
-      - '5434:5432'
+      - '${DB_PORT:-5432}:5432'
     volumes:
       - 'oxidauth-postgres-vol:/var/lib/postgresql/data' 
     healthcheck:
@@ -48,3 +65,4 @@ services:
 volumes:
   oxidauth-postgres-vol:
   oxidauth-etc-oxidauth:
+  oxidauth-target:
