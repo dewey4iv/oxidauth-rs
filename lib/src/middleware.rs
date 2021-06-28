@@ -9,6 +9,7 @@ use crate::db::pg::Pool;
 use crate::http_response::Response as JsonResponse;
 use crate::jwt::Claims;
 use crate::result::Error as BaseError;
+use crate::PublicKey;
 
 use actix_service::{Service, Transform};
 use actix_web::dev::{Payload, ServiceRequest, ServiceResponse};
@@ -176,6 +177,27 @@ pub async fn extract_claims(
     headers: &HeaderMap,
     authority_service: AuthorityService,
 ) -> ClaimsResult {
+    let client_key = headers
+        .get("client-key")
+        .ok_or(ClaimsError::NoClientKey)?
+        .to_str()
+        .map_err(|err| ClaimsError::Other(Box::new(err)))?
+        .to_string();
+
+    let client_key = Uuid::parse_str(&client_key).map_err(|err| ClaimsError::NoHeader)?;
+
+    let public_keys = authority_service
+        .key_pairs_by_client_key(client_key)
+        .await
+        .map_err(|err| ClaimsError::Other(err.into()))?;
+
+    return decode_claims(headers, public_keys);
+}
+
+pub fn decode_claims(
+    headers: &HeaderMap,
+    public_keys: Vec<PublicKey>,
+) -> ClaimsResult {
     let token = headers
         .get("authorization")
         .ok_or(ClaimsError::NoHeader)?
@@ -192,13 +214,9 @@ pub async fn extract_claims(
 
     let client_key = Uuid::parse_str(&client_key).map_err(|err| ClaimsError::NoHeader)?;
 
-    let public_keys = authority_service
-        .key_pairs_by_client_key(client_key)
-        .await
-        .map_err(|err| ClaimsError::Other(err.into()))?;
-
     for key in public_keys.into_iter() {
-        let public_key = base64::decode(key.public_key)?;
+        let public_key = key.decoded_public_key()
+            .map_err(|err| ClaimsError::FailedSignature)?;
 
         if let Ok(claim) = Claims::decode(token.clone(), public_key) {
             return Ok(claim);
