@@ -141,13 +141,20 @@ pub struct KeyPairCreate {
     pub private_key: Vec<u8>,
 }
 
-#[derive(Serialize)]
+#[derive(Serialize, Deserialize)]
 pub struct PublicKey {
     pub id: Uuid,
     pub realm_id: Uuid,
     pub public_key: String,
     pub created_at: Option<NaiveDateTime>,
     pub updated_at: Option<NaiveDateTime>,
+}
+
+impl PublicKey {
+    pub fn decoded_public_key(&self) -> Result<Vec<u8>> {
+        base64::decode_block(&self.public_key)
+            .map_err(|err| err.into())
+    }
 }
 
 impl From<KeyPair> for PublicKey {
