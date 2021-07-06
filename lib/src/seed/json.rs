@@ -93,6 +93,14 @@ pub fn from_bytes<'a>(input: &'a str) -> Result<Box<Realm<'a>>> {
 }
 
 pub async fn seed(pool: &Pool, realm: &mut Realm<'_>) -> Result<()> {
+    let realm_exists = realm_exists(pool, &realm.name)
+        .await
+        .context("unable to check realm existence")?;
+
+    if realm_exists {
+        return Ok(())
+    }
+
     seed_realms(pool, realm)
         .await
         .context("unable to seed realms")?;
@@ -120,6 +128,27 @@ pub async fn seed(pool: &Pool, realm: &mut Realm<'_>) -> Result<()> {
     .context("unable to seed users")?;
 
     Ok(())
+}
+
+pub async fn realm_exists(pool: &Pool, realm_name: &str) -> Result<bool> {
+    use crate::realms::RealmService;
+    use sqlx::error::Error;
+
+    let realms = RealmService::new(pool)?;
+
+    match realms.by_name(realm_name.to_owned()).await {
+        Ok(_) => Ok(false),
+        Err(err) => {
+            if let Some(sql_err) = err.downcast_ref::<sqlx::error::Error>() {
+                match sql_err {
+                    Error::RowNotFound => Ok(true),
+                    _ => Err(err),
+                }
+            } else {
+                Err(err)
+            }
+        },
+    }
 }
 
 pub async fn seed_realms(pool: &Pool, realm: &mut Realm<'_>) -> Result<Uuid> {

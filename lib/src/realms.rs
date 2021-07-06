@@ -48,6 +48,18 @@ impl RealmService {
         Ok(realms)
     }
 
+    pub async fn by_name(&self, name: String) -> Result<Realm> {
+        let result = sqlx::query_as::<_, Realm>(r#"
+            SELECT * FROM realms
+            WHERE name = $1
+        "#)
+            .bind(name)
+            .fetch_one(&self.pool)
+            .await?;
+
+        Ok(result)
+    }
+
     pub async fn by_id(&self, id: Uuid) -> Result<Realm> {
         let result = sqlx::query_as::<_, Realm>(r#"
             SELECT * FROM realms
