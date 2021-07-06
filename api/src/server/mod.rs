@@ -38,6 +38,7 @@ pub async fn start<T: ToSocketAddrs + Debug>(bind: T, database_args: pg::Args<'_
         let skip_paths = vec![
             "/register".into(),
             "/authenticate".into(),
+            "/public_keys".into(),
         ];
 
         let jwt_middleware = Jwt::new(authority_service.clone(), skip_paths);
