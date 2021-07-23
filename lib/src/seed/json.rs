@@ -141,7 +141,7 @@ pub async fn realm_exists(pool: &Pool, realm_name: &str) -> Result<bool> {
         Err(err) => {
             if let Some(sql_err) = err.downcast_ref::<sqlx::error::Error>() {
                 match sql_err {
-                    Error::RowNotFound => Ok(true),
+                    Error::RowNotFound => Ok(false),
                     _ => Err(err),
                 }
             } else {
