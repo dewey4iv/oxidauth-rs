@@ -1,11 +1,13 @@
 #![allow(dead_code, unused_imports, unused_variables)]
 #[allow(unused_imports)]
-#[macro_use] extern crate clap;
-#[macro_use] extern crate serde_derive;
+#[macro_use]
+extern crate clap;
+#[macro_use]
+extern crate serde_derive;
 
 use clap::App as Config;
-use std::path::Path;
 use dotenv;
+use std::path::Path;
 
 use lib::result::Result;
 
@@ -32,9 +34,13 @@ async fn main() -> Result<()> {
     use commands::*;
     match args.subcommand() {
         ("migrate", args) => migrate::cmd(args).await?,
-        ("setup", args) => setup::cmd(args).await?,
+        ("setup", args) => {
+            if let Err(error) = setup::cmd(args).await {
+                println!("{}", error);
+            }
+        }
         ("server", args) => server::cmd(args).await?,
-        _ => {},
+        _ => {}
     }
 
     Ok(())
