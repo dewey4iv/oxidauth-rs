@@ -13,9 +13,18 @@ pub async fn cmd(args: Option<&ArgMatches<'_>>) -> Result<()> {
 
     let pool = pg::new(database_args).await?;
 
-    seed::oxidauth_realm(&pool, username, password, email, first_name, last_name, password_salt, client_key)
-        .await
-        .context("unable to seed oxidauth base data")?;
+    seed::oxidauth_realm(
+        &pool,
+        username,
+        password,
+        email,
+        first_name,
+        last_name,
+        password_salt,
+        client_key,
+    )
+    .await
+    .context("unable to seed oxidauth base data")?;
 
     if let Some(seed_files) = seed_files {
         for seed_file in seed_files.split(",").into_iter() {
@@ -106,5 +115,12 @@ fn setup_args<'a>(
 
     let seed_files = args.value_of("seed-files");
 
-    Ok((username, email, password, password_salt, client_key, seed_files))
+    Ok((
+        username,
+        email,
+        password,
+        password_salt,
+        client_key,
+        seed_files,
+    ))
 }
