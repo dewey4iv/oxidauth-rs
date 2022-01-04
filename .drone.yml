@@ -9,7 +9,7 @@ steps:
     settings:
       webhook:
         from_secret: slack_webhook
-      channel: tech
+      channel: dev-cicd
       link_names: true
       template: >
         oxidauth build for {{build.branch}} started.
@@ -19,6 +19,7 @@ trigger:
     include:
     - production
     - staging
+    - release/**
 
 
 ---
@@ -55,7 +56,7 @@ steps:
     settings:
       webhook:
         from_secret: slack_webhook
-      channel: tech
+      channel: dev-cicd
       link_names: true
       template: >
         {{#success build.status}}
