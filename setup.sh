@@ -2,7 +2,7 @@
 
 set -o nounset                              # Treat unset variables as an error
 
-sleep 10
+sleep 8
 
 echo "starting migrate"
 /bin/api migrate >> /proc/1/fd/1
